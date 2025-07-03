@@ -121,6 +121,12 @@ fun Project.configureJReleaser() {
         release {
             github {
                 repoOwner = "clutcher"
+                token = System.getenv("GITHUB_TOKEN")
+
+                changelog {
+                    formatted.set(org.jreleaser.model.Active.ALWAYS)
+                    preset.set("conventional-commits")
+                }
             }
         }
 
