@@ -7,12 +7,12 @@ plugins {
 
     id("maven-publish")
     id("signing")
-    id("org.jreleaser") version "1.17.0"
+    id("org.jreleaser") version "1.19.0"
 }
 
-extra["springModulithVersion"] = "1.3.3"
-extra["springBootVersion"] = "3.4.4"
-extra["archUnitVersion"] = "1.4.0"
+extra["springModulithVersion"] = "1.4.1"
+extra["springBootVersion"] = "3.5.3"
+extra["archUnitVersion"] = "1.4.1"
 
 allprojects {
     group = "dev.clutcher.modulith"
