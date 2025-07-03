@@ -16,7 +16,7 @@ extra["archUnitVersion"] = "1.4.1"
 
 allprojects {
     group = "dev.clutcher.modulith"
-    version = "1.0.0"
+    version = "1.0.1"
 }
 
 configureJReleaser()
