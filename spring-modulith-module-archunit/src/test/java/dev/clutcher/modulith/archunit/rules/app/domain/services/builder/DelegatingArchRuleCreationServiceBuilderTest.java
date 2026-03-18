@@ -47,6 +47,9 @@ class DelegatingArchRuleCreationServiceBuilderTest {
 
         ArchRule devStandardsRule = apiForArchRuleCreation.createDevStandardsRule(module);
         assertNull(devStandardsRule);
+
+        ArchRule codeConventionsRule = apiForArchRuleCreation.createCodeConventionsRule(module);
+        assertNull(codeConventionsRule);
     }
 
     @Test
@@ -60,6 +63,7 @@ class DelegatingArchRuleCreationServiceBuilderTest {
                 .withLayerRule(DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE)
                 .withDevStandardsRule(DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE)
                 .withPackageStructureRule(DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE)
+                .withCodeConventionsRule(DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE)
                 .create();
 
         // then
@@ -73,6 +77,9 @@ class DelegatingArchRuleCreationServiceBuilderTest {
 
         ArchRule devStandardsRule = apiForArchRuleCreation.createDevStandardsRule(module);
         assertNotNull(devStandardsRule);
+
+        ArchRule codeConventionsRule = apiForArchRuleCreation.createCodeConventionsRule(module);
+        assertNotNull(codeConventionsRule);
     }
 
     @Test
@@ -86,6 +93,7 @@ class DelegatingArchRuleCreationServiceBuilderTest {
                 .withLayerRule((m) -> createTestRule())
                 .withDevStandardsRule((m) -> createTestRule())
                 .withPackageStructureRule((m) -> createTestRule())
+                .withCodeConventionsRule((m) -> createTestRule())
                 .create();
 
         // then
@@ -99,6 +107,9 @@ class DelegatingArchRuleCreationServiceBuilderTest {
 
         ArchRule devStandardsRule = apiForArchRuleCreation.createDevStandardsRule(module);
         assertNotNull(devStandardsRule);
+
+        ArchRule codeConventionsRule = apiForArchRuleCreation.createCodeConventionsRule(module);
+        assertNotNull(codeConventionsRule);
     }
 
     @Test
@@ -124,6 +135,9 @@ class DelegatingArchRuleCreationServiceBuilderTest {
 
         ArchRule devStandardsRule = apiForArchRuleCreation.createDevStandardsRule(module);
         assertNotNull(devStandardsRule);
+
+        ArchRule codeConventionsRule = apiForArchRuleCreation.createCodeConventionsRule(module);
+        assertNotNull(codeConventionsRule);
     }
 
 

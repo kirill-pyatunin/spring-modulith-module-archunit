@@ -1,12 +1,22 @@
 package dev.clutcher.modulith.archunit.rules.app.domain.services.library;
 
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaAnnotation;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
+import com.tngtech.archunit.lang.ConditionEvents;
+import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.Architectures;
 import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
+
+import java.util.Set;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 public class HexagonalArchitectureRulesLibrary {
@@ -132,5 +142,134 @@ public class HexagonalArchitectureRulesLibrary {
                 .should()
                 .haveSimpleNameContaining("Using")
                 .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForDomainModelDependencyRestriction(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        String[] basePackages = {
+                moduleBasePackage + properties.getDomainModelPackageMatcher(),
+                "java..",
+                "lombok..",
+                "org.springframework.stereotype..",
+                "org.slf4j.."
+        };
+        String[] additionalPackages = properties.getAdditionalDomainModelAllowedPackages();
+        String[] allPackages = mergePackages(basePackages, additionalPackages);
+
+        return classes()
+                .that().resideInAPackage(moduleBasePackage + properties.getDomainModelPackageMatcher())
+                .should().onlyDependOnClassesThat()
+                .resideInAnyPackage(allPackages)
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForCrossModuleDomainIsolation(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        return noClasses()
+                .that().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
+                .should().dependOnClassesThat(
+                        resideInAPackage("..app.domain..")
+                                .and(resideOutsideOfPackage(moduleBasePackage + ".."))
+                )
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForDomainModelNotExposedInDrivingAdapters(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        String domainModelPackage = moduleBasePackage + properties.getDomainModelPackageMatcher();
+        return classes()
+                .that().resideInAPackage(moduleBasePackage + properties.getDrivingAdapterPackageMatcher())
+                .and().areNotAnnotatedWith("org.mapstruct.Mapper")
+                .and(areNotAnnotatedWithAnyOf(properties.getGeneratedClassAnnotations()))
+                .should(notReturnDomainModelTypes(domainModelPackage))
+                .allowEmptyShould(true);
+    }
+
+    static DescribedPredicate<JavaClass> areNotAnnotatedWithAnyOf(String[] annotationNames) {
+        return new DescribedPredicate<>("are not annotated with any of the generated class annotations") {
+            @Override
+            public boolean test(JavaClass javaClass) {
+                Set<? extends JavaAnnotation<? extends JavaClass>> annotations = javaClass.getAnnotations();
+                for (String annotationName : annotationNames) {
+                    for (JavaAnnotation<? extends JavaClass> annotation : annotations) {
+                        if (annotation.getRawType().getName().equals(annotationName)) {
+                            return false;
+                        }
+                    }
+                }
+                return true;
+            }
+        };
+    }
+
+    public static ArchRule ruleForNoAutowiredInDomain(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        return noClasses()
+                .that().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
+                .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
+                .orShould().beAnnotatedWith("org.springframework.beans.factory.annotation.Qualifier")
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForNoAutowiredFieldsInDomain(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        return fields()
+                .that().areDeclaredInClassesThat().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
+                .should().notBeAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
+                .andShould().notBeAnnotatedWith("org.springframework.beans.factory.annotation.Qualifier")
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForDomainModelOnlyRecordsOrPojos(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        return classes()
+                .that().resideInAPackage(moduleBasePackage + properties.getDomainModelPackageMatcher())
+                .should().notBeInterfaces()
+                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Service")
+                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Component")
+                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Repository")
+                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Controller")
+                .andShould().notBeAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForSpringAdapterNaming(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        return classes()
+                .that().resideInAPackage(moduleBasePackage + properties.getSpringDrivingAdapterPackageMatcher())
+                .should().haveSimpleNameEndingWith("Adapter")
+                .allowEmptyShould(true);
+    }
+
+    // --- Custom ArchConditions ---
+
+    private static ArchCondition<JavaClass> notReturnDomainModelTypes(String domainModelPackage) {
+        return new ArchCondition<>("not return domain model types from public methods") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                for (JavaMethod method : javaClass.getMethods()) {
+                    if (!method.getModifiers().contains(com.tngtech.archunit.core.domain.JavaModifier.PUBLIC)) {
+                        continue;
+                    }
+                    JavaClass returnType = method.getRawReturnType();
+                    if (returnType.getPackageName().matches(convertToRegex(domainModelPackage))) {
+                        events.add(SimpleConditionEvent.violated(
+                                javaClass,
+                                String.format("Method <%s> in class <%s> returns domain model type <%s>",
+                                        method.getName(), javaClass.getName(), returnType.getName())
+                        ));
+                    }
+                }
+            }
+        };
+    }
+
+    private static String convertToRegex(String packageMatcher) {
+        return packageMatcher
+                .replace(".", "\\.")
+                .replace("\\.\\.", ".*");
+    }
+
+    private static String[] mergePackages(String[] base, String[] additional) {
+        if (additional == null || additional.length == 0) {
+            return base;
+        }
+        String[] merged = new String[base.length + additional.length];
+        System.arraycopy(base, 0, merged, 0, base.length);
+        System.arraycopy(additional, 0, merged, base.length, additional.length);
+        return merged;
     }
 }

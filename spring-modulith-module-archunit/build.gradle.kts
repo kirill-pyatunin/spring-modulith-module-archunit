@@ -6,4 +6,5 @@ dependencies {
     implementation("org.springframework.modulith:spring-modulith-core")
 
     testImplementation("org.springframework.modulith:spring-modulith-starter-test")
+    testCompileOnly("org.mapstruct:mapstruct:1.6.3")
 }

@@ -76,6 +76,11 @@ public class ModuleArchitectureVerificationService implements ApiForModuleArchit
         if (devStandardsRule != null) {
             devStandardsRule.check(allClassesRelatedToModule);
         }
+
+        ArchRule codeConventionsRule = apiForArchRuleCreation.createCodeConventionsRule(module);
+        if (codeConventionsRule != null) {
+            codeConventionsRule.check(allClassesRelatedToModule);
+        }
     }
 
     protected JavaClasses getModuleRelatedJavaClasses(
