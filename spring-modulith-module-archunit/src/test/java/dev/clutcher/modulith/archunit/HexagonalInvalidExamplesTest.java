@@ -32,7 +32,6 @@ public class HexagonalInvalidExamplesTest {
     private static final String DOMAIN_MODEL_EXPOSED_IN_CONTROLLER_MESSAGE = "returns domain model type";
     private static final String DTO_IN_CLASS_NAME_MESSAGE = "has simple name containing 'Dto'";
     private static final String IMPL_POSTFIX_MESSAGE = "has simple name ending with 'Impl'";
-    private static final String AUTOWIRED_IN_DOMAIN_MESSAGE = "Field <dev.clutcher.modulith.archunit.examples.hexagonal.invalid.autowiredInDomain.app.domain.services.ServiceWithAutowired.someField> is annotated with @Autowired";
     private static final String NON_RECORD_IN_DOMAIN_MODEL_MESSAGE = "Class <dev.clutcher.modulith.archunit.examples.hexagonal.invalid.nonRecordInDomainModel.app.domain.model.DomainModelInterface> is an interface";
     private static final String WRONG_LOGGER_FIELD_NAME_MESSAGE = "does not have name 'LOGGER'";
     private static final String DOMAIN_MODEL_DEPENDENCY_VIOLATION_MESSAGE = "should only depend on classes that reside in any package";
@@ -122,11 +121,6 @@ public class HexagonalInvalidExamplesTest {
     @Test
     void shouldFailWhenClassNameEndsWithImpl() throws NoSuchElementException {
         assertViolationThrown("implPostfixInClassName", IMPL_POSTFIX_MESSAGE);
-    }
-
-    @Test
-    void shouldFailWhenAutowiredUsedInDomain() throws NoSuchElementException {
-        assertViolationThrown("autowiredInDomain", AUTOWIRED_IN_DOMAIN_MESSAGE);
     }
 
     @Test

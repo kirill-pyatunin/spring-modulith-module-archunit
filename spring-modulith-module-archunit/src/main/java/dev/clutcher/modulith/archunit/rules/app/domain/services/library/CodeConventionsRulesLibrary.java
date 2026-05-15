@@ -7,7 +7,6 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
-import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
@@ -22,10 +21,10 @@ public class CodeConventionsRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForNoImplPostfix(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+    public static ArchRule ruleForNoImplPostfix(String moduleBasePackage, String[] generatedClassAnnotations) {
         return noClasses()
                 .that().resideInAPackage(moduleBasePackage + "..")
-                .and(HexagonalArchitectureRulesLibrary.areNotAnnotatedWithAnyOf(properties.getGeneratedClassAnnotations()))
+                .and(ArchRulePredicates.areNotAnnotatedWithAnyOf(generatedClassAnnotations))
                 .should().haveSimpleNameEndingWith("Impl")
                 .allowEmptyShould(true);
     }
@@ -38,8 +37,14 @@ public class CodeConventionsRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForSpringAdapterPublicParameterTypes(String moduleBasePackage, HexagonalArchitectureSettings properties) {
-        String springAdapterPackage = moduleBasePackage + properties.getSpringDrivingAdapterPackageMatcher();
+    public static ArchRule ruleForSpringAdapterNaming(String springAdapterPackage) {
+        return classes()
+                .that().resideInAPackage(springAdapterPackage)
+                .should().haveSimpleNameEndingWith("Adapter")
+                .allowEmptyShould(true);
+    }
+
+    public static ArchRule ruleForSpringAdapterPublicParameterTypes(String springAdapterPackage) {
         return classes()
                 .that().resideInAPackage(springAdapterPackage)
                 .should(havePublicMethodParameterTypesStartingWithPublic())
@@ -54,9 +59,9 @@ public class CodeConventionsRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForPublicMethodParameterTypeNaming(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+    public static ArchRule ruleForPublicMethodParameterTypeNaming(String drivingPortPackage) {
         return classes()
-                .that().resideInAPackage(moduleBasePackage + properties.getDrivingPortPackageMatcher())
+                .that().resideInAPackage(drivingPortPackage)
                 .should(haveMethodParameterTypesFollowingNamingConvention())
                 .allowEmptyShould(true);
     }

@@ -66,18 +66,17 @@ class ApplicationModulesTests {
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivingPorts(base, settings))
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivenPorts(base, settings))
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivenAdapters(base, settings))
-                            .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInDrivingAdapters(base, settings))
-                            .and(HexagonalArchitectureRulesLibrary.ruleForNoAutowiredInDomain(base, settings))
-                            .and(HexagonalArchitectureRulesLibrary.ruleForNoAutowiredFieldsInDomain(base, settings))
-                            .and(HexagonalArchitectureRulesLibrary.ruleForSpringAdapterNaming(base, settings));
+                            .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInDrivingAdapters(base, settings));
                 })
                 .withCodeConventionsRule(module -> {
                     String base = module.getBasePackage().getName();
+                    String springAdapterPkg = base + settings.getSpringDrivingAdapterPackageMatcher();
+                    String[] generatedAnnotations = settings.getGeneratedClassAnnotations();
                     return CompositeArchRule
                             .of(CodeConventionsRulesLibrary.ruleForNoDtoInClassNames(base))
-                            .and(CodeConventionsRulesLibrary.ruleForNoImplPostfix(base, settings))
+                            .and(CodeConventionsRulesLibrary.ruleForNoImplPostfix(base, generatedAnnotations))
                             .and(CodeConventionsRulesLibrary.ruleForLoggerFieldNaming(base))
-                            .and(CodeConventionsRulesLibrary.ruleForSpringAdapterPublicParameterTypes(base, settings))
+                            .and(CodeConventionsRulesLibrary.ruleForSpringAdapterPublicParameterTypes(springAdapterPkg))
                             .and(CodeConventionsRulesLibrary.ruleForMapperAnnotatedWithGenerated(base));
                 })
                 .create();

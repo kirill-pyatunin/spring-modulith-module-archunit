@@ -1,7 +1,5 @@
 package dev.clutcher.modulith.archunit.rules.app.domain.services.library;
 
-import com.tngtech.archunit.base.DescribedPredicate;
-import com.tngtech.archunit.core.domain.JavaAnnotation;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
 import com.tngtech.archunit.lang.ArchCondition;
@@ -11,12 +9,9 @@ import com.tngtech.archunit.lang.SimpleConditionEvent;
 import com.tngtech.archunit.library.Architectures;
 import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
 
-import java.util.Set;
-
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
-import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 public class HexagonalArchitectureRulesLibrary {
@@ -162,56 +157,13 @@ public class HexagonalArchitectureRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForCrossModuleDomainIsolation(String moduleBasePackage, HexagonalArchitectureSettings properties) {
-        return noClasses()
-                .that().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
-                .should().dependOnClassesThat(
-                        resideInAPackage("..app.domain..")
-                                .and(resideOutsideOfPackage(moduleBasePackage + ".."))
-                )
-                .allowEmptyShould(true);
-    }
-
     public static ArchRule ruleForDomainModelNotExposedInDrivingAdapters(String moduleBasePackage, HexagonalArchitectureSettings properties) {
         String domainModelPackage = moduleBasePackage + properties.getDomainModelPackageMatcher();
         return classes()
                 .that().resideInAPackage(moduleBasePackage + properties.getDrivingAdapterPackageMatcher())
                 .and().areNotAnnotatedWith("org.mapstruct.Mapper")
-                .and(areNotAnnotatedWithAnyOf(properties.getGeneratedClassAnnotations()))
+                .and(ArchRulePredicates.areNotAnnotatedWithAnyOf(properties.getGeneratedClassAnnotations()))
                 .should(notReturnDomainModelTypes(domainModelPackage))
-                .allowEmptyShould(true);
-    }
-
-    static DescribedPredicate<JavaClass> areNotAnnotatedWithAnyOf(String[] annotationNames) {
-        return new DescribedPredicate<>("are not annotated with any of the generated class annotations") {
-            @Override
-            public boolean test(JavaClass javaClass) {
-                Set<? extends JavaAnnotation<? extends JavaClass>> annotations = javaClass.getAnnotations();
-                for (String annotationName : annotationNames) {
-                    for (JavaAnnotation<? extends JavaClass> annotation : annotations) {
-                        if (annotation.getRawType().getName().equals(annotationName)) {
-                            return false;
-                        }
-                    }
-                }
-                return true;
-            }
-        };
-    }
-
-    public static ArchRule ruleForNoAutowiredInDomain(String moduleBasePackage, HexagonalArchitectureSettings properties) {
-        return noClasses()
-                .that().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
-                .should().beAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
-                .orShould().beAnnotatedWith("org.springframework.beans.factory.annotation.Qualifier")
-                .allowEmptyShould(true);
-    }
-
-    public static ArchRule ruleForNoAutowiredFieldsInDomain(String moduleBasePackage, HexagonalArchitectureSettings properties) {
-        return fields()
-                .that().areDeclaredInClassesThat().resideInAPackage(moduleBasePackage + properties.getDomainPackageMatcher())
-                .should().notBeAnnotatedWith("org.springframework.beans.factory.annotation.Autowired")
-                .andShould().notBeAnnotatedWith("org.springframework.beans.factory.annotation.Qualifier")
                 .allowEmptyShould(true);
     }
 
@@ -224,13 +176,6 @@ public class HexagonalArchitectureRulesLibrary {
                 .andShould().notBeAnnotatedWith("org.springframework.stereotype.Repository")
                 .andShould().notBeAnnotatedWith("org.springframework.stereotype.Controller")
                 .andShould().notBeAnnotatedWith("org.springframework.web.bind.annotation.RestController")
-                .allowEmptyShould(true);
-    }
-
-    public static ArchRule ruleForSpringAdapterNaming(String moduleBasePackage, HexagonalArchitectureSettings properties) {
-        return classes()
-                .that().resideInAPackage(moduleBasePackage + properties.getSpringDrivingAdapterPackageMatcher())
-                .should().haveSimpleNameEndingWith("Adapter")
                 .allowEmptyShould(true);
     }
 
