@@ -3,6 +3,7 @@ package dev.clutcher.modulith.archunit;
 import com.tngtech.archunit.lang.CompositeArchRule;
 import dev.clutcher.modulith.archunit.rules.app.api.ApiForArchRuleCreation;
 import dev.clutcher.modulith.archunit.rules.app.api.ApiForCustomizingArchRuleCreation;
+import dev.clutcher.modulith.archunit.rules.app.domain.services.ArchRuleRegistry;
 import dev.clutcher.modulith.archunit.rules.app.domain.services.HexagonalArchRuleCreationService;
 import dev.clutcher.modulith.archunit.rules.app.domain.services.library.CodeConventionsRulesLibrary;
 import dev.clutcher.modulith.archunit.rules.app.domain.services.library.HexagonalArchitectureRulesLibrary;
@@ -21,17 +22,17 @@ class ApplicationModulesTests {
 
     @Test
     void shouldPassSpringModulithArchitectureRules() {
-        // given
+        // Given
         ApplicationModules applicationModules = ApplicationModules.of("dev.clutcher.modulith.archunit");
         applicationModules.forEach(System.out::println);
 
         ModuleArchitectureVerificationService verificationService = createInstanceOfVerificationService();
 
-        // when
+        // When
         applicationModules.verify();
         verificationService.verifyAllModules(applicationModules);
 
-        // then
+        // Then
         // No violation exceptions should be thrown.
     }
 
@@ -57,8 +58,12 @@ class ApplicationModulesTests {
             }
         };
 
+        ArchRuleRegistry registry = new ArchRuleRegistry(ruleId -> true);
+        HexagonalArchitectureRulesLibrary.allRules().forEach(registry::register);
+        CodeConventionsRulesLibrary.allRules().forEach(registry::register);
+
         ApiForArchRuleCreation ruleCreation = ApiForCustomizingArchRuleCreation
-                .forExistingArchRuleCreation(new HexagonalArchRuleCreationService(settings))
+                .forExistingArchRuleCreation(new HexagonalArchRuleCreationService(settings, registry))
                 .withDevStandardsRule(module -> {
                     String base = module.getBasePackage().getName();
                     return CompositeArchRule

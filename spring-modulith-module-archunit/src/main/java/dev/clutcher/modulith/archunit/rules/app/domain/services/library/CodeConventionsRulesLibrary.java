@@ -7,12 +7,51 @@ import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
+import dev.clutcher.modulith.archunit.rules.app.domain.model.RuleGroup;
+import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
+import dev.clutcher.modulith.archunit.rules.app.spi.NamedArchRule;
+
+import java.util.List;
+import java.util.function.BiFunction;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
 
 public class CodeConventionsRulesLibrary {
+
+    public static List<NamedArchRule> allRules() {
+        return List.of(
+                namedRule("no-dto-in-class-names",
+                        (base, s) -> ruleForNoDtoInClassNames(base)),
+                namedRule("no-impl-postfix",
+                        (base, s) -> ruleForNoImplPostfix(base, s.getGeneratedClassAnnotations())),
+                namedRule("logger-field-naming",
+                        (base, s) -> ruleForLoggerFieldNaming(base)),
+                namedRule("spring-adapter-naming",
+                        (base, s) -> ruleForSpringAdapterNaming(base + s.getSpringDrivingAdapterPackageMatcher())),
+                namedRule("spring-adapter-public-parameter-types",
+                        (base, s) -> ruleForSpringAdapterPublicParameterTypes(base + s.getSpringDrivingAdapterPackageMatcher())),
+                namedRule("mapper-annotated-with-generated",
+                        (base, s) -> ruleForMapperAnnotatedWithGenerated(base)),
+                namedRule("public-method-parameter-type-naming",
+                        (base, s) -> ruleForPublicMethodParameterTypeNaming(base + s.getDrivingPortPackageMatcher()))
+        );
+    }
+
+    private static NamedArchRule namedRule(String id,
+                                           BiFunction<String, HexagonalArchitectureSettings, ArchRule> factory) {
+        return new NamedArchRule() {
+            @Override
+            public String getId() { return id; }
+            @Override
+            public String getGroup() { return RuleGroup.CODE_CONVENTIONS; }
+            @Override
+            public ArchRule create(String moduleBasePackage, HexagonalArchitectureSettings settings) {
+                return factory.apply(moduleBasePackage, settings);
+            }
+        };
+    }
 
     public static ArchRule ruleForNoDtoInClassNames(String moduleBasePackage) {
         return noClasses()

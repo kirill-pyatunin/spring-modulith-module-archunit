@@ -5,7 +5,10 @@ import com.tngtech.archunit.lang.ArchRule;
 import dev.clutcher.modulith.archunit.rules.app.api.ApiForArchRuleCreation;
 import dev.clutcher.modulith.archunit.rules.app.api.ApiForCustomizingArchRuleCreation;
 import dev.clutcher.modulith.archunit.rules.app.domain.model.RuleApplicabilityChecker;
+import dev.clutcher.modulith.archunit.rules.app.domain.services.ArchRuleRegistry;
 import dev.clutcher.modulith.archunit.rules.app.domain.services.HexagonalArchRuleCreationService;
+import dev.clutcher.modulith.archunit.rules.app.domain.services.library.CodeConventionsRulesLibrary;
+import dev.clutcher.modulith.archunit.rules.app.domain.services.library.HexagonalArchitectureRulesLibrary;
 import dev.clutcher.modulith.archunit.rules.out.spring.HexagonalPackageSettingsUsingSpringProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.annotation.Testable;
@@ -22,9 +25,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class DelegatingArchRuleCreationServiceBuilderTest {
 
     private static final RuleApplicabilityChecker ALWAYS_APPLICABLE_FUNCTION = (module1, allClassesRelatedToModule) -> true;
-    private static final HexagonalArchRuleCreationService DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE = new HexagonalArchRuleCreationService(
-            new HexagonalPackageSettingsUsingSpringProperties()
-    );
+    private static final HexagonalArchRuleCreationService DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE;
+    static {
+        ArchRuleRegistry registry = new ArchRuleRegistry(ruleId -> true);
+        HexagonalArchitectureRulesLibrary.allRules().forEach(registry::register);
+        CodeConventionsRulesLibrary.allRules().forEach(registry::register);
+        DEFAULT_HEXAGONAL_ARCH_RULES_INSTANCE = new HexagonalArchRuleCreationService(
+                new HexagonalPackageSettingsUsingSpringProperties(), registry
+        );
+    }
 
     @Test
     void shouldNotProvideRuleWhenNotSetInBuilder() {
