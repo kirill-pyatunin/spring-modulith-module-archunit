@@ -109,7 +109,7 @@ public class HexagonalInvalidExamplesTest {
     // --- New tests ---
 
     @Test
-    void shouldFailWhenDomainModelExposedInDrivingAdapter() throws NoSuchElementException {
+    void shouldFailWhenDomainModelExposedInController() throws NoSuchElementException {
         assertViolationThrown("domainModelExposedInController", DOMAIN_MODEL_EXPOSED_IN_CONTROLLER_MESSAGE);
     }
 

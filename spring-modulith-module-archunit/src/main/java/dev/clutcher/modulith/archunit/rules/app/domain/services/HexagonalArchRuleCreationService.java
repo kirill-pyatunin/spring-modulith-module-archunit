@@ -53,7 +53,7 @@ public class HexagonalArchRuleCreationService implements ApiForArchRuleCreation 
                 .and(HexagonalArchitectureRulesLibrary.ruleForDrivingPorts(moduleBasePackage, properties))
                 .and(HexagonalArchitectureRulesLibrary.ruleForDrivenPorts(moduleBasePackage, properties))
                 .and(HexagonalArchitectureRulesLibrary.ruleForDrivenAdapters(moduleBasePackage, properties))
-                .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInDrivingAdapters(moduleBasePackage, properties))
+                .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInControllers(moduleBasePackage, properties))
                 .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelOnlyRecordsOrPojos(moduleBasePackage, properties));
     }
 

@@ -144,7 +144,8 @@ public class HexagonalArchitectureRulesLibrary {
                 moduleBasePackage + properties.getDomainModelPackageMatcher(),
                 "java..",
                 "lombok..",
-                "org.springframework.stereotype..",
+                "org.springframework.stereotype.Component",
+                "org.springframework.stereotype.Service",
                 "org.slf4j.."
         };
         String[] additionalPackages = properties.getAdditionalDomainModelAllowedPackages();
@@ -157,12 +158,11 @@ public class HexagonalArchitectureRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForDomainModelNotExposedInDrivingAdapters(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+    public static ArchRule ruleForDomainModelNotExposedInControllers(String moduleBasePackage, HexagonalArchitectureSettings properties) {
         String domainModelPackage = moduleBasePackage + properties.getDomainModelPackageMatcher();
         return classes()
-                .that().resideInAPackage(moduleBasePackage + properties.getDrivingAdapterPackageMatcher())
-                .and().areNotAnnotatedWith("org.mapstruct.Mapper")
-                .and(ArchRulePredicates.areNotAnnotatedWithAnyOf(properties.getGeneratedClassAnnotations()))
+                .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
+                .or().areAnnotatedWith("org.springframework.stereotype.Controller")
                 .should(notReturnDomainModelTypes(domainModelPackage))
                 .allowEmptyShould(true);
     }
@@ -171,11 +171,6 @@ public class HexagonalArchitectureRulesLibrary {
         return classes()
                 .that().resideInAPackage(moduleBasePackage + properties.getDomainModelPackageMatcher())
                 .should().notBeInterfaces()
-                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Service")
-                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Component")
-                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Repository")
-                .andShould().notBeAnnotatedWith("org.springframework.stereotype.Controller")
-                .andShould().notBeAnnotatedWith("org.springframework.web.bind.annotation.RestController")
                 .allowEmptyShould(true);
     }
 

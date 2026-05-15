@@ -66,7 +66,7 @@ class ApplicationModulesTests {
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivingPorts(base, settings))
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivenPorts(base, settings))
                             .and(HexagonalArchitectureRulesLibrary.ruleForDrivenAdapters(base, settings))
-                            .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInDrivingAdapters(base, settings));
+                            .and(HexagonalArchitectureRulesLibrary.ruleForDomainModelNotExposedInControllers(base, settings));
                 })
                 .withCodeConventionsRule(module -> {
                     String base = module.getBasePackage().getName();
