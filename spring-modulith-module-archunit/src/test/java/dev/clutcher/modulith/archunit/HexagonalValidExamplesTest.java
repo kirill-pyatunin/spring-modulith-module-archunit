@@ -40,7 +40,6 @@ public class HexagonalValidExamplesTest {
         modulesArchitectureVerifier.verifyAllModules(applicationModules);
 
         // then
-        // No violation exceptions should be thrown.
     }
 
 }

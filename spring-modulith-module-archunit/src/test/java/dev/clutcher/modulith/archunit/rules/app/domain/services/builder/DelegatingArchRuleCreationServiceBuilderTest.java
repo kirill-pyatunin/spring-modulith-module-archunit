@@ -12,7 +12,6 @@ import dev.clutcher.modulith.archunit.rules.app.domain.services.library.Hexagona
 import dev.clutcher.modulith.archunit.rules.out.spring.HexagonalPackageSettingsUsingSpringProperties;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.commons.annotation.Testable;
-import org.springframework.context.annotation.Bean;
 import org.springframework.modulith.core.ApplicationModule;
 import org.springframework.modulith.core.ApplicationModules;
 
@@ -149,14 +148,6 @@ class DelegatingArchRuleCreationServiceBuilderTest {
         assertNotNull(codeConventionsRule);
     }
 
-
-    @Bean
-    public ApiForArchRuleCreation customArchRuleCreation() {
-        return ApiForCustomizingArchRuleCreation
-                .forApplicabilityChecker((m, allClassesRelatedToModule) -> true)
-                .withPackageStructureRule((m) -> null)
-                .create();
-    }
 
     static ArchRule createTestRule() {
         return noClasses()

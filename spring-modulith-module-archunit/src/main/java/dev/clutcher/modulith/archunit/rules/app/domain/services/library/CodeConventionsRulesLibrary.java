@@ -8,11 +8,9 @@ import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
 import com.tngtech.archunit.lang.SimpleConditionEvent;
 import dev.clutcher.modulith.archunit.rules.app.domain.model.RuleGroup;
-import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
 import dev.clutcher.modulith.archunit.rules.app.spi.NamedArchRule;
 
 import java.util.List;
-import java.util.function.BiFunction;
 
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
 import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.fields;
@@ -22,40 +20,26 @@ public class CodeConventionsRulesLibrary {
 
     public static List<NamedArchRule> allRules() {
         return List.of(
-                namedRule("no-dto-in-class-names",
-                        (base, s) -> ruleForNoDtoInClassNames(base)),
-                namedRule("no-impl-postfix",
+                NamedArchRule.of("no-dto-in-class-names", RuleGroup.CODE_CONVENTIONS,
+                        (base, s) -> ruleForNoDtoInClassNames(base + s.getDomainPackageMatcher())),
+                NamedArchRule.of("no-impl-postfix", RuleGroup.CODE_CONVENTIONS,
                         (base, s) -> ruleForNoImplPostfix(base, s.getGeneratedClassAnnotations())),
-                namedRule("logger-field-naming",
+                NamedArchRule.of("logger-field-naming", RuleGroup.CODE_CONVENTIONS,
                         (base, s) -> ruleForLoggerFieldNaming(base)),
-                namedRule("spring-adapter-naming",
+                NamedArchRule.of("spring-adapter-naming", RuleGroup.CODE_CONVENTIONS,
                         (base, s) -> ruleForSpringAdapterNaming(base + s.getSpringDrivingAdapterPackageMatcher())),
-                namedRule("spring-adapter-public-parameter-types",
+                NamedArchRule.of("spring-adapter-public-parameter-types", RuleGroup.CODE_CONVENTIONS,
                         (base, s) -> ruleForSpringAdapterPublicParameterTypes(base + s.getSpringDrivingAdapterPackageMatcher())),
-                namedRule("mapper-annotated-with-generated",
+                NamedArchRule.of("mapper-annotated-with-generated", RuleGroup.CODE_CONVENTIONS,
                         (base, s) -> ruleForMapperAnnotatedWithGenerated(base)),
-                namedRule("public-method-parameter-type-naming",
-                        (base, s) -> ruleForPublicMethodParameterTypeNaming(base + s.getDrivingPortPackageMatcher()))
+                NamedArchRule.of("api-method-parameter-type-naming", RuleGroup.CODE_CONVENTIONS,
+                        (base, s) -> ruleForApiMethodParameterTypeNaming(base + s.getDrivingPortPackageMatcher()))
         );
     }
 
-    private static NamedArchRule namedRule(String id,
-                                           BiFunction<String, HexagonalArchitectureSettings, ArchRule> factory) {
-        return new NamedArchRule() {
-            @Override
-            public String getId() { return id; }
-            @Override
-            public String getGroup() { return RuleGroup.CODE_CONVENTIONS; }
-            @Override
-            public ArchRule create(String moduleBasePackage, HexagonalArchitectureSettings settings) {
-                return factory.apply(moduleBasePackage, settings);
-            }
-        };
-    }
-
-    public static ArchRule ruleForNoDtoInClassNames(String moduleBasePackage) {
+    public static ArchRule ruleForNoDtoInClassNames(String domainPackage) {
         return noClasses()
-                .that().resideInAPackage(moduleBasePackage + "..")
+                .that().resideInAPackage(domainPackage)
                 .should().haveSimpleNameContaining("Dto")
                 .allowEmptyShould(true);
     }
@@ -98,21 +82,21 @@ public class CodeConventionsRulesLibrary {
                 .allowEmptyShould(true);
     }
 
-    public static ArchRule ruleForPublicMethodParameterTypeNaming(String drivingPortPackage) {
+    public static ArchRule ruleForApiMethodParameterTypeNaming(String drivingPortPackage) {
         return classes()
                 .that().resideInAPackage(drivingPortPackage)
                 .should(haveMethodParameterTypesFollowingNamingConvention())
                 .allowEmptyShould(true);
     }
 
-
-    // --- Custom ArchConditions ---
-
     private static ArchCondition<JavaClass> havePublicMethodParameterTypesStartingWithPublic() {
         return new ArchCondition<>("have public method parameter types starting with 'Public'") {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
                 for (JavaMethod method : javaClass.getMethods()) {
+                    if (!method.getOwner().equals(javaClass)) {
+                        continue;
+                    }
                     if (!method.getModifiers().contains(com.tngtech.archunit.core.domain.JavaModifier.PUBLIC)) {
                         continue;
                     }
@@ -156,13 +140,15 @@ public class CodeConventionsRulesLibrary {
             @Override
             public void check(JavaClass javaClass, ConditionEvents events) {
                 for (JavaMethod method : javaClass.getMethods()) {
+                    if (!method.getOwner().equals(javaClass)) {
+                        continue;
+                    }
                     String methodName = method.getName().toLowerCase();
-                    for (JavaParameter parameter : method.getParameters()) {
-                        JavaClass paramType = parameter.getRawType();
-                        if (paramType.getPackageName().startsWith("java.")) {
-                            continue;
-                        }
-                        String paramTypeName = paramType.getSimpleName();
+                    List<JavaParameter> nonJavaParameters = method.getParameters().stream()
+                            .filter(p -> !p.getRawType().getPackageName().startsWith("java."))
+                            .toList();
+                    for (JavaParameter parameter : nonJavaParameters) {
+                        String paramTypeName = parameter.getRawType().getSimpleName();
                         checkParameterTypeConvention(javaClass, method, paramTypeName, methodName, events);
                     }
                 }

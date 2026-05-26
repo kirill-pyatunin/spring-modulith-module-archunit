@@ -12,7 +12,6 @@ import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSetting
 import dev.clutcher.modulith.archunit.rules.app.spi.NamedArchRule;
 
 import java.util.List;
-import java.util.function.BiFunction;
 
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
 import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideOutsideOfPackage;
@@ -23,43 +22,29 @@ public class HexagonalArchitectureRulesLibrary {
 
     public static List<NamedArchRule> allRules() {
         return List.of(
-                namedRule("layer-definition", RuleGroup.LAYER,
-                        (base, s) -> createLayerDefinitionRule(base, s)),
-                namedRule("domain-model-dependency-restriction", RuleGroup.LAYER,
-                        (base, s) -> ruleForDomainModelDependencyRestriction(base, s)),
-                namedRule("module-root-package-structure", RuleGroup.PACKAGE_STRUCTURE,
-                        (base, s) -> ruleForModuleRootPackageStructure(base, s)),
-                namedRule("application-ports-package-structure", RuleGroup.PACKAGE_STRUCTURE,
-                        (base, s) -> ruleForApplicationPortsPackageStructure(base, s)),
-                namedRule("adapters-package-structure", RuleGroup.PACKAGE_STRUCTURE,
-                        (base, s) -> ruleForAdaptersPackageStructure(base, s)),
-                namedRule("application-services", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForApplicationServices(base, s)),
-                namedRule("driving-ports", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForDrivingPorts(base, s)),
-                namedRule("driven-ports", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForDrivenPorts(base, s)),
-                namedRule("driven-adapters", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForDrivenAdapters(base, s)),
-                namedRule("domain-model-not-exposed-in-controllers", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForDomainModelNotExposedInControllers(base, s)),
-                namedRule("domain-model-only-records-or-pojos", RuleGroup.DEV_STANDARDS,
-                        (base, s) -> ruleForDomainModelOnlyRecordsOrPojos(base, s))
+                NamedArchRule.of("layer-definition", RuleGroup.LAYER,
+                        HexagonalArchitectureRulesLibrary::createLayerDefinitionRule),
+                NamedArchRule.of("domain-model-dependency-restriction", RuleGroup.LAYER,
+                        HexagonalArchitectureRulesLibrary::ruleForDomainModelDependencyRestriction),
+                NamedArchRule.of("module-root-package-structure", RuleGroup.PACKAGE_STRUCTURE,
+                        HexagonalArchitectureRulesLibrary::ruleForModuleRootPackageStructure),
+                NamedArchRule.of("application-ports-package-structure", RuleGroup.PACKAGE_STRUCTURE,
+                        HexagonalArchitectureRulesLibrary::ruleForApplicationPortsPackageStructure),
+                NamedArchRule.of("adapters-package-structure", RuleGroup.PACKAGE_STRUCTURE,
+                        HexagonalArchitectureRulesLibrary::ruleForAdaptersPackageStructure),
+                NamedArchRule.of("application-services", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForApplicationServices),
+                NamedArchRule.of("driving-ports", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForDrivingPorts),
+                NamedArchRule.of("driven-ports", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForDrivenPorts),
+                NamedArchRule.of("driven-adapters", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForDrivenAdapters),
+                NamedArchRule.of("domain-model-not-exposed-in-controllers", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForDomainModelNotExposedInControllers),
+                NamedArchRule.of("domain-model-only-records-or-pojos", RuleGroup.DEV_STANDARDS,
+                        HexagonalArchitectureRulesLibrary::ruleForDomainModelOnlyRecordsOrPojos)
         );
-    }
-
-    private static NamedArchRule namedRule(String id, String group,
-                                           BiFunction<String, HexagonalArchitectureSettings, ArchRule> factory) {
-        return new NamedArchRule() {
-            @Override
-            public String getId() { return id; }
-            @Override
-            public String getGroup() { return group; }
-            @Override
-            public ArchRule create(String moduleBasePackage, HexagonalArchitectureSettings settings) {
-                return factory.apply(moduleBasePackage, settings);
-            }
-        };
     }
 
     private static final String HEXAGONAL_DRIVING_PORTS_LAYER_NAME = "Driving Ports";
@@ -219,8 +204,6 @@ public class HexagonalArchitectureRulesLibrary {
                 .should().notBeInterfaces()
                 .allowEmptyShould(true);
     }
-
-    // --- Custom ArchConditions ---
 
     private static ArchCondition<JavaClass> notReturnDomainModelTypes(String domainModelPackage) {
         return new ArchCondition<>("not return domain model types from public methods") {

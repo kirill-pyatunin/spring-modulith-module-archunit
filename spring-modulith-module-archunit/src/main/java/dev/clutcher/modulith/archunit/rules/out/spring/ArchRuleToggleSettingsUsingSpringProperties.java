@@ -7,35 +7,18 @@ import java.util.Map;
 
 public class ArchRuleToggleSettingsUsingSpringProperties implements ArchRuleToggleSettings {
 
-    private Map<String, Boolean> hexagonal = new HashMap<>();
-    private Map<String, Boolean> codeConventions = new HashMap<>();
+    private Map<String, Boolean> toggle = new HashMap<>();
 
     @Override
     public boolean isRuleEnabled(String ruleId) {
-        Boolean hexagonalEnabled = hexagonal.get(ruleId);
-        if (hexagonalEnabled != null) {
-            return hexagonalEnabled;
-        }
-        Boolean codeConventionsEnabled = codeConventions.get(ruleId);
-        if (codeConventionsEnabled != null) {
-            return codeConventionsEnabled;
-        }
-        return true;
+        return toggle.getOrDefault(ruleId, true);
     }
 
-    public Map<String, Boolean> getHexagonal() {
-        return hexagonal;
+    public Map<String, Boolean> getToggle() {
+        return toggle;
     }
 
-    public void setHexagonal(Map<String, Boolean> hexagonal) {
-        this.hexagonal = hexagonal;
-    }
-
-    public Map<String, Boolean> getCodeConventions() {
-        return codeConventions;
-    }
-
-    public void setCodeConventions(Map<String, Boolean> codeConventions) {
-        this.codeConventions = codeConventions;
+    public void setToggle(Map<String, Boolean> toggle) {
+        this.toggle = toggle;
     }
 }

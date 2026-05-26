@@ -2,6 +2,7 @@ package dev.clutcher.modulith.archunit.rules.app.domain.services;
 
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.CompositeArchRule;
+import dev.clutcher.modulith.archunit.rules.app.domain.model.RuleGroup;
 import dev.clutcher.modulith.archunit.rules.app.spi.ArchRuleToggleSettings;
 import dev.clutcher.modulith.archunit.rules.app.spi.HexagonalArchitectureSettings;
 import dev.clutcher.modulith.archunit.rules.app.spi.NamedArchRule;
@@ -24,9 +25,9 @@ public class ArchRuleRegistry {
         rules.put(rule.getId(), rule);
     }
 
-    public ArchRule buildGroupRule(String group, String moduleBasePackage, HexagonalArchitectureSettings settings) {
+    public ArchRule buildGroupRule(RuleGroup group, String moduleBasePackage, HexagonalArchitectureSettings settings) {
         List<ArchRule> enabledRules = rules.values().stream()
-                .filter(r -> r.getGroup().equals(group))
+                .filter(r -> r.getGroup() == group)
                 .filter(r -> toggleSettings.isRuleEnabled(r.getId()))
                 .map(r -> r.create(moduleBasePackage, settings))
                 .filter(Objects::nonNull)

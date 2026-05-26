@@ -1,12 +1,19 @@
 package dev.clutcher.modulith.archunit.rules.app.domain.model;
 
-public final class RuleGroup {
+public enum RuleGroup {
 
-    public static final String LAYER = "layer";
-    public static final String PACKAGE_STRUCTURE = "package-structure";
-    public static final String DEV_STANDARDS = "dev-standards";
-    public static final String CODE_CONVENTIONS = "code-conventions";
+    LAYER("layer"),
+    PACKAGE_STRUCTURE("package-structure"),
+    DEV_STANDARDS("dev-standards"),
+    CODE_CONVENTIONS("code-conventions");
 
-    private RuleGroup() {
+    private final String value;
+
+    RuleGroup(String value) {
+        this.value = value;
+    }
+
+    public String getValue() {
+        return value;
     }
 }
