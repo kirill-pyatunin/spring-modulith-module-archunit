@@ -2,6 +2,7 @@ package dev.clutcher.modulith.archunit.rules.app.domain.services.library;
 
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.domain.JavaMethod;
+import com.tngtech.archunit.core.domain.JavaModifier;
 import com.tngtech.archunit.lang.ArchCondition;
 import com.tngtech.archunit.lang.ArchRule;
 import com.tngtech.archunit.lang.ConditionEvents;
@@ -171,6 +172,7 @@ public class HexagonalArchitectureRulesLibrary {
     }
 
     public static ArchRule ruleForDomainModelDependencyRestriction(String moduleBasePackage, HexagonalArchitectureSettings properties) {
+        // Domain model package is included in basePackages to allow domain classes to reference each other
         String[] basePackages = {
                 moduleBasePackage + properties.getDomainModelPackageMatcher(),
                 "java..",
@@ -191,9 +193,14 @@ public class HexagonalArchitectureRulesLibrary {
 
     public static ArchRule ruleForDomainModelNotExposedInControllers(String moduleBasePackage, HexagonalArchitectureSettings properties) {
         String domainModelPackage = moduleBasePackage + properties.getDomainModelPackageMatcher();
-        return classes()
-                .that().areAnnotatedWith("org.springframework.web.bind.annotation.RestController")
-                .or().areAnnotatedWith("org.springframework.stereotype.Controller")
+        String[] controllerAnnotations = properties.getControllerAnnotations();
+
+        var classesRule = classes().that().areAnnotatedWith(controllerAnnotations[0]);
+        for (int i = 1; i < controllerAnnotations.length; i++) {
+            classesRule = classesRule.or().areAnnotatedWith(controllerAnnotations[i]);
+        }
+
+        return classesRule
                 .should(notReturnDomainModelTypes(domainModelPackage))
                 .allowEmptyShould(true);
     }
@@ -201,8 +208,40 @@ public class HexagonalArchitectureRulesLibrary {
     public static ArchRule ruleForDomainModelOnlyRecordsOrPojos(String moduleBasePackage, HexagonalArchitectureSettings properties) {
         return classes()
                 .that().resideInAPackage(moduleBasePackage + properties.getDomainModelPackageMatcher())
-                .should().notBeInterfaces()
+                .should(beRecordEnumOrPojo())
                 .allowEmptyShould(true);
+    }
+
+    private static ArchCondition<JavaClass> beRecordEnumOrPojo() {
+        return new ArchCondition<>("be a record, enum, or a POJO (concrete class with fields)") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                if (javaClass.isRecord() || javaClass.isEnum()) {
+                    return;
+                }
+                if (javaClass.isInterface()) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> is an interface, expected record, enum, or POJO", javaClass.getName())));
+                    return;
+                }
+                if (javaClass.getModifiers().contains(JavaModifier.ABSTRACT)) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> is abstract, expected record, enum, or POJO", javaClass.getName())));
+                    return;
+                }
+                if (javaClass.isAnnotation()) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> is an annotation, expected record, enum, or POJO", javaClass.getName())));
+                    return;
+                }
+                boolean hasInstanceFields = javaClass.getFields().stream()
+                        .anyMatch(f -> !f.getModifiers().contains(JavaModifier.STATIC));
+                if (!hasInstanceFields) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> has no instance fields, not a valid POJO", javaClass.getName())));
+                }
+            }
+        };
     }
 
     private static ArchCondition<JavaClass> notReturnDomainModelTypes(String domainModelPackage) {

@@ -38,9 +38,9 @@ public class CodeConventionsRulesLibrary {
     }
 
     public static ArchRule ruleForNoDtoInClassNames(String domainPackage) {
-        return noClasses()
+        return classes()
                 .that().resideInAPackage(domainPackage)
-                .should().haveSimpleNameContaining("Dto")
+                .should(notHaveDtoOrDataInClassName())
                 .allowEmptyShould(true);
     }
 
@@ -87,6 +87,25 @@ public class CodeConventionsRulesLibrary {
                 .that().resideInAPackage(drivingPortPackage)
                 .should(haveMethodParameterTypesFollowingNamingConvention())
                 .allowEmptyShould(true);
+    }
+
+    private static ArchCondition<JavaClass> notHaveDtoOrDataInClassName() {
+        return new ArchCondition<>("not have 'DTO'/'Dto' or 'Data' in class name") {
+            @Override
+            public void check(JavaClass javaClass, ConditionEvents events) {
+                String simpleName = javaClass.getSimpleName();
+                if (simpleName.toLowerCase().contains("dto")) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> contains 'dto' (case-insensitive) in its name",
+                                    javaClass.getName())));
+                }
+                if (simpleName.endsWith("Data")) {
+                    events.add(SimpleConditionEvent.violated(javaClass,
+                            String.format("Class <%s> has name ending with 'Data'",
+                                    javaClass.getName())));
+                }
+            }
+        };
     }
 
     private static ArchCondition<JavaClass> havePublicMethodParameterTypesStartingWithPublic() {

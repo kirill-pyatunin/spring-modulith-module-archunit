@@ -29,9 +29,12 @@ public class HexagonalInvalidExamplesTest {
     private static final String WRONG_DRIVEN_ADAPTER_CLASS_NAME_MESSAGE = "Class <dev.clutcher.modulith.archunit.examples.hexagonal.invalid.wrongImplementationOfDrivenAdapter.out.WrongDrivenAdapterName> does not have simple name containing 'Using'";
     private static final String WRONG_APPLICATION_SERVICE_CLASS_NAME_MESSAGE = "Class <dev.clutcher.modulith.archunit.examples.hexagonal.invalid.wrongImplementationOfApplicationServices.app.domain.services.WrongServiceName> does not have simple name ending with 'Service'";
     private static final String DOMAIN_MODEL_EXPOSED_IN_CONTROLLER_MESSAGE = "returns domain model type";
-    private static final String DTO_IN_CLASS_NAME_MESSAGE = "has simple name containing 'Dto'";
+    private static final String DTO_IN_CLASS_NAME_MESSAGE = "contains 'dto' (case-insensitive) in its name";
+    private static final String DATA_IN_CLASS_NAME_MESSAGE = "has name ending with 'Data'";
     private static final String IMPL_POSTFIX_MESSAGE = "has simple name ending with 'Impl'";
-    private static final String NON_RECORD_IN_DOMAIN_MODEL_MESSAGE = "Class <dev.clutcher.modulith.archunit.examples.hexagonal.invalid.nonRecordInDomainModel.app.domain.model.DomainModelInterface> is an interface";
+    private static final String NON_RECORD_IN_DOMAIN_MODEL_MESSAGE = "is an interface, expected record, enum, or POJO";
+    private static final String ABSTRACT_CLASS_IN_DOMAIN_MODEL_MESSAGE = "is abstract, expected record, enum, or POJO";
+    private static final String EMPTY_CLASS_IN_DOMAIN_MODEL_MESSAGE = "has no instance fields, not a valid POJO";
     private static final String WRONG_LOGGER_FIELD_NAME_MESSAGE = "does not have name 'LOGGER'";
     private static final String DOMAIN_MODEL_DEPENDENCY_VIOLATION_MESSAGE = "should only depend on classes that reside in any package";
     private static final String CROSS_MODULE_DOMAIN_DEPENDENCY_MESSAGE = "has type <dev.clutcher.modulith.archunit.examples.hexagonal.valid.standard.app.domain.model.Order>";
@@ -114,6 +117,16 @@ public class HexagonalInvalidExamplesTest {
     }
 
     @Test
+    void shouldFailWhenClassNameContainsUppercaseDTO() throws NoSuchElementException {
+        assertViolationThrown("uppercaseDtoInClassName", DTO_IN_CLASS_NAME_MESSAGE);
+    }
+
+    @Test
+    void shouldFailWhenClassNameEndsWithData() throws NoSuchElementException {
+        assertViolationThrown("dataInClassName", DATA_IN_CLASS_NAME_MESSAGE);
+    }
+
+    @Test
     void shouldFailWhenClassNameEndsWithImpl() throws NoSuchElementException {
         assertViolationThrown("implPostfixInClassName", IMPL_POSTFIX_MESSAGE);
     }
@@ -121,6 +134,16 @@ public class HexagonalInvalidExamplesTest {
     @Test
     void shouldFailWhenInterfaceUsedInDomainModel() throws NoSuchElementException {
         assertViolationThrown("nonRecordInDomainModel", NON_RECORD_IN_DOMAIN_MODEL_MESSAGE);
+    }
+
+    @Test
+    void shouldFailWhenAbstractClassUsedInDomainModel() throws NoSuchElementException {
+        assertViolationThrown("abstractClassInDomainModel", ABSTRACT_CLASS_IN_DOMAIN_MODEL_MESSAGE);
+    }
+
+    @Test
+    void shouldFailWhenEmptyClassUsedInDomainModel() throws NoSuchElementException {
+        assertViolationThrown("emptyClassInDomainModel", EMPTY_CLASS_IN_DOMAIN_MODEL_MESSAGE);
     }
 
     @Test

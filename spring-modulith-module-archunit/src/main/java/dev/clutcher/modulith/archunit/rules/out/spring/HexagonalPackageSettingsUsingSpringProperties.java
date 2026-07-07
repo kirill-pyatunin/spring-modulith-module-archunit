@@ -10,6 +10,7 @@ public class HexagonalPackageSettingsUsingSpringProperties implements HexagonalA
     private Adapter adapter = new Adapter();
     private Application application = new Application();
     private List<String> generatedClassAnnotations;
+    private List<String> controllerAnnotations;
 
     public List<String> getGeneratedClassAnnotationsList() {
         return generatedClassAnnotations;
@@ -25,6 +26,18 @@ public class HexagonalPackageSettingsUsingSpringProperties implements HexagonalA
             return new String[0];
         }
         return generatedClassAnnotations.toArray(new String[0]);
+    }
+
+    public void setControllerAnnotations(List<String> controllerAnnotations) {
+        this.controllerAnnotations = controllerAnnotations;
+    }
+
+    @Override
+    public String[] getControllerAnnotations() {
+        if (controllerAnnotations == null || controllerAnnotations.isEmpty()) {
+            return HexagonalArchitectureSettings.super.getControllerAnnotations();
+        }
+        return controllerAnnotations.toArray(new String[0]);
     }
 
     public static class Port {

@@ -31,5 +31,12 @@ public interface HexagonalArchitectureSettings {
         return new String[0];
     }
 
+    default String[] getControllerAnnotations() {
+        return new String[] {
+                "org.springframework.web.bind.annotation.RestController",
+                "org.springframework.stereotype.Controller"
+        };
+    }
+
     String[] getGeneratedClassAnnotations();
 }
